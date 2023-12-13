@@ -539,6 +539,25 @@ export const FIR_SETTINGS: { [name: string]: FIR } = {
       },
     },
   },
+  EDUU: {
+    neighbourPrefixes : ["ED", "LO", "LK", "LS", "EB", "EK", "EP", "LF"],
+    neighbourFirs: ["EDGG", "EDWW", "EDMM", "EDYY", "LOVV", "LKAA", "LSAS", "LSAZ", "EBBU", "EKDK", "EPWW", "LFEE"],
+    pages: {
+        "WEST": {
+          staffingSectors: [
+
+          ],
+          statusSectors :[
+
+          ],
+          majorAerodromes : ["EDDF"],
+          aerodromes : ["EDDS"],
+          relevantAerodromes : [],
+          areas : {},
+
+        }
+    }
+  }
 }
 export const FIR_TO_VATGLASSES: { [fir: string]: string } = {
   EDMM: "ed",
