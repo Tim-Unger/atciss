@@ -245,15 +245,6 @@ export const FIR_SETTINGS: { [name: string]: FIR } = {
           "ed/LBU",
           "ed/NKRH",
           "ed/NKRL",
-          "ed/KIR",
-          "ed/SIG",
-          "ed/KNG",
-          "ed/TAU",
-          "ed/GIN",
-          "ed/PFA",
-          "ed/DKB",
-          "ed/REU",
-          "ed/STG",
         ],
         statusSectors: [
           ["ed/BAD", "ed/MAN", "ed/LBU", "ed/NKRH", "ed/NKRL"],
@@ -264,7 +255,7 @@ export const FIR_SETTINGS: { [name: string]: FIR } = {
           ["ed/DFDN", "ed/DFDS", "ed/DFAN", "ed/DFAS"],
         ],
         majorAerodromes: ["EDDF", "EDDS"],
-        aerodromes: ["ETAR", "EDFM"],
+        aerodromes: ["EDFM"],
         relevantAerodromes: [],
         areas: {
           // Murgtal: [],
@@ -280,15 +271,6 @@ export const FIR_SETTINGS: { [name: string]: FIR } = {
           "ed/TAU",
           "ed/GIN",
           "ed/HEF",
-          "ed/PADH",
-          "ed/PADL",
-          "ed/EIF",
-          "ed/DUS",
-          "ed/NOR",
-          "ed/DKA",
-          "ed/RUD",
-          "ed/KIR",
-          "ed/HAB",
         ],
         statusSectors: [
           ["ed/GED", "ed/SIG", "ed/TAU", "ed/GIN", "ed/HEF"],
@@ -353,19 +335,26 @@ export const FIR_SETTINGS: { [name: string]: FIR } = {
         relevantAerodromes: [],
         areas: {} //TODO
       },
+      "ATIS EBG06": {
+        staffingSectors : [
+            "ed/HMM",
+            "ed/PADH",
+            "ed/PADL"
+        ],
+        statusSectors : [
+          ["ed/HMM", "ed/PADH", "ed/PADL"]
+          ["ed/BOT", "ed/DUS"]
+          ["ed/DKA", "ed/NOR"],
+          ["ed/EMS", "ed/HAN", "ed/DST"],
+          ["eh/ACE", "eh/ACW", "eh/ABK", "eh/MIL"],
+          ["ed/MNS", "ed/RHR", "ed/FUL", "ed/NTM"]
+        ]
+      },
       // TODO: IRL different layout
       "ATIS EBG07": {
         staffingSectors: [
           "ed/DKA",
           "ed/NOR",
-          "ed/PADL",
-          "ed/PADH",
-          "ed/BOT",
-          "ed/DUS",
-          "ed/EIF",
-          "ed/TAU",
-          "ed/SIG",
-          "ed/RUD",
         ],
         statusSectors: [
           ["ed/DKA", "ed/NOR"],
@@ -381,20 +370,13 @@ export const FIR_SETTINGS: { [name: string]: FIR } = {
         staffingSectors: [
           "ed/STG",
           "ed/REU",
-          "ed/BAD",
-          "ed/LBU",
-          "ed/NKRH",
-          "ed/NKRL",
-          "ed/KNG",
-          "ed/DKB",
-          "ed/PFA",
         ],
         statusSectors: [
           ["ed/STG", "ed/REU", "ed/BAD", "ed/LBU"],
           ["ed/NKRH", "ed/NKRL", "ed/KNG", "ed/DKB", "ed/PFA"],
         ],
         majorAerodromes: ["EDDS"],
-        aerodromes: [],
+        aerodromes: ["EDSB"],
         relevantAerodromes: [],
         areas: {
           "ED-R132": ["ED-R132A", "ED-R132B"],
