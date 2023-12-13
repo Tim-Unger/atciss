@@ -1,3 +1,5 @@
+import { selectFirMajorAerodromes } from "../services/configSlice"
+
 type FIR = {
   neighbourPrefixes: string[]
   neighbourFirs: string[]
@@ -217,6 +219,25 @@ export const FIR_SETTINGS: { [name: string]: FIR } = {
     neighbourFirs: ["EDMM", "EDWW", "EHAA", "EBBU", "LFEE", "LSAS"],
     pages: {
       // TODO: IRL different layout
+      "ATIS EBG01":{
+        staffingSectors : [
+          "ed/DUS",
+          "ed/BOT"
+        ],
+        statusSectors: [
+          ["ed/DUS", "ed/BOT"],
+          ["ed/DKA", "ed/NOR"],
+          ["ed/PADH", "ed/PADL", "ed/HMM"],
+          ["ed/RHR"],
+          ["ed/SIG", "ed/TAU"],
+          ["eh/ACE", "eh/ACW", "eh/ABK", "eh/MIL"],
+          ["eb/BW", "eb/BE", "eb/BL", ]
+        ],
+        majorAerodromes: ["EDDL"],
+        aerodromes: ["EDLV", "EDLN"],
+        relevantAerodromes : [],
+        areas: {}, //TODO
+      },
       "ATIS EBG02": {
         staffingSectors: [
           "ed/BAD",
@@ -285,6 +306,52 @@ export const FIR_SETTINGS: { [name: string]: FIR } = {
           "ED-R 135 Hammelburg": ["ED-R135A", "ED-R135B", "ED-R135C"],
           "ED-R 97 Schwarzenborn": ["ED-R97A", "ED-R97B"],
         },
+      },
+      "ATIS EBG04":{
+        staffingSectors : [ 
+          "ed/DKB",
+          "ed/HAB",
+          "ed/KNG",
+          "ed/KNG",
+          "ed/KTG",
+          "ed/PSA"
+        ],
+        statusSectors: [
+            ["ed/DKB", "ed/HAB", "ed/KNG", "ed/KTG", "ed/PSA"],
+            ["ed/BAD", "ed/LBU", "ed/MAN", "ed/NKRH", "ed/NKRL"],
+            ["ed/GED", "ed/GIN", "ed/HEF"],
+            ["ed/FAN", "ed/FAS", "ed/FDN", "ed/FDS"],
+            ["ed/STG"],
+            ["ed/NDG", "ed/WLD", "ed/ZUG", "ed/HOF", "ed/EGG", "ed/BBG", "ed/ALB", "ED/FRK"],
+            ["ed/WUR", "ed/FUL", "ed/FFM", ]
+        ],
+        majorAerodromes: ["EDDF"],
+        aerodromes: ["EDDS"],
+        relevantAerodromes: [],
+        areas: { }, //TODO
+      },
+      "ATIS EBG05":{
+        staffingSectors: [
+          "ed/EIF",
+          "ed/KIR",
+          "ed/PFA",
+          "ed/RUD"
+        ],
+        statusSectors:[
+          ["ed/EIF", "ed/KIR", "ed/PFA", "ed/RUD"],
+          ["ed/FAN", "ed/FAS", "ed/FDN", "ed/FDS"],
+          ["ed/BAD", "ed/LBU", "ed/MAN", "ed/NKRH", "ed/NKRL"],
+          ["ed/DKA", "ed/NOR"],
+          ["ed/TAU", "ed/SIG"],
+          ["ed/STG"],
+          ["eb/BE", "eb/BW", "eb/BU", "eb/BL", "eb/XA"],
+          ["ed/NTM", "ed/SLN"],
+          ["lf/EE"],
+        ],
+        majorAerodromes: ["EDFH", "EDDR", "EDDF"],
+        aerodromes: ["EDDS", "ETAR", "ETAD", "ETSB", "EDRZ", "ELLX"],
+        relevantAerodromes: [],
+        areas: {} //TODO
       },
       // TODO: IRL different layout
       "ATIS EBG07": {
