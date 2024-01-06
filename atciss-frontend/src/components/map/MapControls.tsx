@@ -1,7 +1,9 @@
-import { Box, Text } from "theme-ui"
+import { Box, Flex, Grid, Text } from "theme-ui"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
 import { usePollControllers } from "../../services/controllerApi"
 import {
+  selectAirwayLowerUpper,
+  selectAirwayOnMap,
   selectAreasOnMap,
   selectDFSOnMap,
   selectDWDOnMap,
@@ -9,6 +11,9 @@ import {
   selectOpenFlightmapsOnMap,
   selectSatelliteOnMap,
   selectSectorsOnMap,
+  selectSigmetOnMap,
+  setAirwayLowerUpper,
+  setAirwayOnMap,
   setAreas,
   setDFS,
   setDWD,
@@ -16,11 +21,15 @@ import {
   setOpenFlightmaps,
   setSatellite,
   setSectors,
+  setSigmet,
 } from "../../services/mapSlice"
 import { SectorControls } from "../SectorControls"
 import { LevelChoice } from "./LevelChoice"
+import { RefObject } from "react"
+import { Map } from "leaflet"
+import { Search } from "./search/Search"
 
-export const MapControls = () => {
+export const MapControls = ({ map }: { map: RefObject<Map> }) => {
   const dispatch = useAppDispatch()
 
   const { data: _c } = usePollControllers()
@@ -32,9 +41,12 @@ export const MapControls = () => {
   const sectors = useAppSelector(selectSectorsOnMap)
   const areas = useAppSelector(selectAreasOnMap)
   const loa = useAppSelector(selectLoaOnMap)
+  const airways = useAppSelector(selectAirwayOnMap)
+  const airwayLowerUpper = useAppSelector(selectAirwayLowerUpper)
+  const sigmet = useAppSelector(selectSigmetOnMap)
 
   return (
-    <>
+    <Search map={map}>
       <Box>
         <Text as="label" variant="label">
           <input
@@ -79,6 +91,16 @@ export const MapControls = () => {
         <Text as="label" variant="label">
           <input
             type="checkbox"
+            checked={sigmet}
+            onChange={(e) => dispatch(setSigmet(e.target.checked))}
+          />
+          SIGMET
+        </Text>
+      </Box>
+      <Box>
+        <Text as="label" variant="label">
+          <input
+            type="checkbox"
             checked={areas}
             onChange={(e) => dispatch(setAreas(e.target.checked))}
           />
@@ -105,8 +127,29 @@ export const MapControls = () => {
           LOA
         </Text>
       </Box>
+      <Flex sx={{ gap: 2 }}>
+        <Text as="label" variant="label">
+          <input
+            type="checkbox"
+            checked={airways}
+            onChange={(e) => dispatch(setAirwayOnMap(e.target.checked))}
+          />
+          Airways
+        </Text>
+        {airways && (
+          <select
+            value={airwayLowerUpper}
+            onChange={(e) =>
+              dispatch(setAirwayLowerUpper(e.target.value as "LOWER" | "UPPER"))
+            }
+          >
+            <option value="LOWER">Lower</option>
+            <option value="UPPER">Upper</option>
+          </select>
+        )}
+      </Flex>
       {(areas || sectors || loa) && <LevelChoice />}
       {sectors && <SectorControls />}
-    </>
+    </Search>
   )
 }

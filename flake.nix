@@ -1,8 +1,17 @@
 {
   description = "VATSIM Germany ATCISS";
 
+  nixConfig = {
+    extra-substituters = [
+      "https://atciss.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "atciss.cachix.org-1:5YxebJMhVUPoSmO/f+KYNp2fDa6f8navGGWzCSKCI0A="
+    ];
+  };
+
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
     flake-utils.url = "github:numtide/flake-utils";
 
     pre-commit-hooks = {
@@ -23,7 +32,7 @@
     };
 
     napalm = {
-      url = "github:nix-community/napalm/pull/58/head";
+      url = "github:nix-community/napalm";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         flake-utils.follows = "flake-utils";
@@ -59,6 +68,12 @@
             fastapi-async-sqlalchemy = pyprev.fastapi-async-sqlalchemy.overridePythonAttrs (old: {
               nativeBuildInputs = (old.nativeBuildInputs or []) ++ [pyfinal.setuptools];
             });
+            frozenlist = pyprev.frozenlist.overridePythonAttrs (old: {
+              nativeBuildInputs = (old.nativeBuildInputs or []) ++ [pyfinal.expandvars];
+            });
+            pyrasite = pyprev.pyrasite.overridePythonAttrs (old: {
+              nativeBuildInputs = (old.nativeBuildInputs or []) ++ [pyfinal.setuptools];
+            });
             alembic = pyprev.alembic.overridePythonAttrs (old: {
               meta = old.meta // {priority = -1;};
             });
@@ -79,6 +94,8 @@
               inherit python overrides;
               projectDir = final.poetry2nix.cleanPythonSources {src = ./.;};
               pythonImportCheck = ["atciss"];
+              groups = [];
+              checkgroups = [];
             })
             .overrideAttrs (attrs: {
               postInstall = ''
@@ -129,22 +146,15 @@
           contrib = pkgs.atciss-contrib;
           frontend = pkgs.atciss-frontend;
 
-          backend-image = pkgs.dockerTools.buildImage {
+          backend-image = pkgs.dockerTools.buildLayeredImage {
             name = "ghcr.io/vatger/atciss/atciss-backend";
             tag = "latest";
 
-            copyToRoot = pkgs.buildEnv {
-              name = "image-root";
-              paths = [
-                pkgs.cacert
-                pkgs.tzdata
-                pkgs.atciss
-              ];
-              pathsToLink = ["/bin" "/share"];
-            };
-
-            uid = 1000;
-            gid = 1000;
+            contents = with pkgs; [
+              cacert
+              tzdata
+              atciss
+            ];
 
             config = {
               Env = [
@@ -181,13 +191,23 @@
                       root ${pkgs.atciss-frontend}/;
                       include ${pkgs.mailcap}/etc/nginx/mime.types;
 
+                      set $backend_target "http://backend:8000";
+                      set $flower_target "http://flower:5555";
+
                       location / {
-                        try_files $uri /index.html ;
+                        try_files $uri /index.html;
                       }
 
                       location /api/ {
-                        set $proxy_target "http://backend:8000";
-                        proxy_pass $proxy_target;
+                        proxy_pass $backend_target;
+                      }
+
+                      location /admin/flower {
+                        proxy_pass $flower_target;
+                      }
+
+                      location /metrics {
+                        proxy_pass $backend_target;
                       }
                     }
                   }
@@ -242,13 +262,6 @@
             echo "[nix][lint] Run atciss black checks."
             ruff format --check --diff atciss
           '';
-          backend-dev = {
-            type = "app";
-            program = toString (pkgs.writeScript "backend-dev" ''
-              export PATH="${pkgs.lib.makeBinPath [pkgs.atciss-dev]}"
-              uvicorn --factory atciss.app.asgi:get_application --reload
-            '');
-          };
         };
 
         formatter = pkgs.alejandra;

@@ -6,6 +6,7 @@ import celery.signals
 from asgiref.sync import async_to_sync
 
 from atciss.app.tasks.sct import import_sct
+from atciss.app.tasks.sigmet import fetch_sigmet
 
 from .app.tasks.basic_ad import fetch_basic_ads
 from .config import settings, redis
@@ -50,26 +51,27 @@ app.conf.beat_schedule = {
     "update_taf_metar": {"task": "update_taf_metar", "schedule": crontab(minute="*")},
     "update_ecfmp": {"task": "update_ecfmp", "schedule": crontab(minute="*")},
     "update_areas": {"task": "update_areas", "schedule": crontab(minute="*/10")},
-    "update_booking": {"task": "update_booking", "schedule": crontab(minute="*/10")},
-    "update_aliases": {"task": "update_aliases", "schedule": crontab(minute="*/60")},
+    "update_sigmet": {"task": "update_sigmet", "schedule": crontab(minute="*/10")},
+    # "update_booking": {"task": "update_booking", "schedule": crontab(minute="*/10")},
+    # "update_aliases": {"task": "update_aliases", "schedule": crontab(minute="*/60")},
     "update_dfs_aixm": {
         "task": "update_dfs_aixm",
-        "schedule": crontab(day_of_week="1"),
+        "schedule": crontab(day_of_week="1", hour="3", minute="0"),
     },
 }
 
 
-@app.task(name="update_notam")
+@app.task(name="update_notam", expires=60 * 30)
 def update_notam() -> None:
     async_to_sync(fetch_notam)()
 
 
-@app.task(name="update_loa")
+@app.task(name="update_loa", expires=60 * 60)
 def update_loa() -> None:
     async_to_sync(fetch_loas)()
 
 
-@app.task(name="update_sectors")
+@app.task(name="update_sectors", expires=60 * 60)
 def update_sectors() -> None:
     async_to_sync(fetch_sector_data)()
 
@@ -79,37 +81,37 @@ def update_basic_ads() -> None:
     async_to_sync(fetch_basic_ads)()
 
 
-@app.task(name="update_vatsim")
+@app.task(name="update_vatsim", expires=60)
 def update_vatsim() -> None:
     async_to_sync(fetch_vatsim_data)()
 
 
-@app.task(name="update_taf_metar")
+@app.task(name="update_taf_metar", expires=60)
 def update_taf_metar() -> None:
     async_to_sync(fetch_taf_metar)()
 
 
-@app.task(name="update_dfs_aixm")
+@app.task(name="update_dfs_aixm", expires=24 * 60 * 60)
 def update_dfs_aixm_data() -> None:
     async_to_sync(fetch_dfs_aixm_data)()
 
 
-@app.task(name="update_ecfmp")
+@app.task(name="update_ecfmp", expires=60)
 def update_ecfmp() -> None:
     async_to_sync(fetch_ecfmp)()
 
 
-@app.task(name="update_areas")
+@app.task(name="update_areas", expires=10 * 60)
 def update_areas() -> None:
     async_to_sync(fetch_areas)()
 
 
-@app.task(name="update_booking")
+@app.task(name="update_booking", expires=10 * 60)
 def update_booking() -> None:
     async_to_sync(fetch_booking)()
 
 
-@app.task(name="update_aliases")
+@app.task(name="update_aliases", expires=60 * 60)
 def update_aliases() -> None:
     async_to_sync(fetch_aliases)()
 
@@ -117,6 +119,11 @@ def update_aliases() -> None:
 @app.task(name="update_ac_data")
 def update_ac_data() -> None:
     async_to_sync(fetch_ac_data)()
+
+
+@app.task(name="update_sigmet")
+def update_sigmet() -> None:
+    async_to_sync(fetch_sigmet)()
 
 
 @app.task(name="import_sct_data")

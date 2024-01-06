@@ -21,47 +21,64 @@ import { aircraftApi } from "../services/aircraftApi"
 import { trafficApi } from "../services/trafficApi"
 import { setupListeners } from "@reduxjs/toolkit/query"
 import { atisAfwReducer } from "../services/atisAfwSlice"
+import { sectorstatusApi } from "../services/sectorstatusApi"
+import { agreementsApi } from "../services/agreementsApi"
+import { notamReducer } from "../services/notamSlice"
+import { airwayApi } from "../services/airwayApi"
+import { aliasesApi } from "../services/aliasesApi"
+import { sigmetApi } from "../services/sigmetApi"
 
 export const store = configureStore({
   reducer: {
-    [metarApi.reducerPath]: metarApi.reducer,
+    [adApi.reducerPath]: adApi.reducer,
+    [agreementsApi.reducerPath]: agreementsApi.reducer,
+    [aircraftApi.reducerPath]: aircraftApi.reducer,
+    [airwayApi.reducerPath]: airwayApi.reducer,
+    [aliasesApi.reducerPath]: aliasesApi.reducer,
+    [areaApi.reducerPath]: areaApi.reducer,
     [atisApi.reducerPath]: atisApi.reducer,
     [bookingApi.reducerPath]: bookingApi.reducer,
-    [notamApi.reducerPath]: notamApi.reducer,
-    [adApi.reducerPath]: adApi.reducer,
-    [sectorApi.reducerPath]: sectorApi.reducer,
     [controllerApi.reducerPath]: controllerApi.reducer,
-    [loaApi.reducerPath]: loaApi.reducer,
-    [tafApi.reducerPath]: tafApi.reducer,
     [ecfmpApi.reducerPath]: ecfmpApi.reducer,
     [eventApi.reducerPath]: eventApi.reducer,
-    [areaApi.reducerPath]: areaApi.reducer,
+    [loaApi.reducerPath]: loaApi.reducer,
+    [metarApi.reducerPath]: metarApi.reducer,
     [navaidApi.reducerPath]: navaidApi.reducer,
-    [aircraftApi.reducerPath]: aircraftApi.reducer,
+    [notamApi.reducerPath]: notamApi.reducer,
+    [sectorApi.reducerPath]: sectorApi.reducer,
+    [sectorstatusApi.reducerPath]: sectorstatusApi.reducer,
+    [sigmetApi.reducerPath]: sigmetApi.reducer,
+    [tafApi.reducerPath]: tafApi.reducer,
     [trafficApi.reducerPath]: trafficApi.reducer,
-    auth: authReducer,
     activePositions: activePositionReducer,
-    config: configReducer,
-    atisAfw: atisAfwReducer,
-    map: mapReducer,
     aircraft: aircraftReducer,
+    atisAfw: atisAfwReducer,
+    auth: authReducer,
+    config: configReducer,
+    map: mapReducer,
+    notamView: notamReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
-      .concat(metarApi.middleware)
+      .concat(adApi.middleware)
+      .concat(agreementsApi.middleware)
+      .concat(aircraftApi.middleware)
+      .concat(airwayApi.middleware)
+      .concat(aliasesApi.middleware)
+      .concat(areaApi.middleware)
       .concat(atisApi.middleware)
       .concat(bookingApi.middleware)
-      .concat(adApi.middleware)
-      .concat(notamApi.middleware)
-      .concat(sectorApi.middleware)
-      .concat(loaApi.middleware)
-      .concat(tafApi.middleware)
       .concat(controllerApi.middleware)
       .concat(ecfmpApi.middleware)
-      .concat(areaApi.middleware)
       .concat(eventApi.middleware)
+      .concat(loaApi.middleware)
+      .concat(metarApi.middleware)
       .concat(navaidApi.middleware)
-      .concat(aircraftApi.middleware)
+      .concat(notamApi.middleware)
+      .concat(sectorApi.middleware)
+      .concat(sectorstatusApi.middleware)
+      .concat(sigmetApi.middleware)
+      .concat(tafApi.middleware)
       .concat(trafficApi.middleware),
 })
 

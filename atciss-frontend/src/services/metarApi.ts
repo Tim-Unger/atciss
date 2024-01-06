@@ -1,9 +1,9 @@
 import { createApi } from "@reduxjs/toolkit/query/react"
 import { fetchWithAuth } from "../app/auth"
-import createCachedSelector from "re-reselect"
 import { RootState } from "../app/store"
 import { selectAirportICAOs } from "./sectorApi"
 import { createSelector } from "@reduxjs/toolkit"
+import { createCachedSelector } from "re-reselect"
 
 export interface Clouds {
   cover: "FEW" | "SCT" | "BKN" | "OVC" | "NSC"
@@ -58,8 +58,8 @@ export const xmc: (metar: Metar) => "VMC" | "IMC" | "LVP" = (metar) => {
   return (c && c < 200) || metar.rvr.some((rvr) => rvr.low < 600)
     ? "LVP"
     : (c && c < 1500) || metar.vis.some((v) => v < 5000)
-    ? "IMC"
-    : "VMC"
+      ? "IMC"
+      : "VMC"
 }
 
 export const hpaToInhg: (qnh: number) => number = (qnh) =>
@@ -71,8 +71,15 @@ export const metarApi = createApi({
   endpoints: (builder) => ({
     getByIcaoCodes: builder.query<{ [id: string]: Metar }, string[]>({
       query: (icaoList) => ({
-        url: `metar`,
+        url: "metar",
         params: icaoList.map((icao) => ["icao", icao]),
+      }),
+    }),
+    getRaw: builder.query<string, string>({
+      query: (icao) => ({
+        url: "metar/raw",
+        params: [["id", icao]],
+        responseHandler: "text",
       }),
     }),
   }),
@@ -84,6 +91,11 @@ export const usePollMetarByIcaoCodes: typeof metarApi.useGetByIcaoCodesQuery = (
 ) =>
   metarApi.useGetByIcaoCodesQuery(icao, { pollingInterval: 60000, ...options })
 
+export const usePollRawMetar: typeof metarApi.useGetRawQuery = (
+  icao,
+  options,
+) => metarApi.useGetRawQuery(icao, { pollingInterval: 60000, ...options })
+
 const selectAllMetars = createSelector(
   (state: RootState) => state,
   selectAirportICAOs,
@@ -92,6 +104,16 @@ const selectAllMetars = createSelector(
 )
 
 export const selectMetar = createCachedSelector(
-  [selectAllMetars, (_state: RootState, icao: string) => icao],
-  (metars, icao) => metars[icao ?? ""],
+  (state: RootState) => state,
+  selectAllMetars,
+  (_state: RootState, icao: string) => icao,
+  (state, metars, icao) =>
+    metars[icao ?? ""] ??
+    metarApi.endpoints.getByIcaoCodes.select([icao])(state)?.data?.[icao ?? ""],
+)((_state, icao) => icao)
+
+export const selectRawMetar = createCachedSelector(
+  (state: RootState) => state,
+  (_state: RootState, icao: string) => icao,
+  (state, icao) => metarApi.endpoints.getRaw.select(icao)(state)?.data,
 )((_state, icao) => icao)

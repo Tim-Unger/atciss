@@ -1,18 +1,18 @@
 /** @jsxImportSource theme-ui */
 
 import { Box, Text } from "theme-ui"
-import { FIR_SETTINGS } from "../app/config"
-import { useAppSelector } from "../app/hooks"
-import { selectActiveFir } from "../services/configSlice"
+import { useAppSelector } from "../../app/hooks"
+import {
+  selectActiveFir,
+  selectNeighbourFirs,
+} from "../../services/configSlice"
 import { DateTime, Duration } from "luxon"
-import { usePollEventsByFirs } from "../services/eventApi"
+import { usePollEventsByFirs } from "../../services/eventApi"
 
 export const Events = () => {
   const activeFir = useAppSelector(selectActiveFir)
-  const { data: events } = usePollEventsByFirs([
-    ...FIR_SETTINGS[activeFir].neighbourFirs,
-    activeFir,
-  ])
+  const neighbourFirs = useAppSelector(selectNeighbourFirs)
+  const { data: events } = usePollEventsByFirs([...neighbourFirs, activeFir])
 
   return events
     ?.filter(
@@ -32,8 +32,8 @@ export const Events = () => {
             <Text variant="label">{e.fir}</Text>:{" "}
             <Text variant="label" sx={{ color: active ? "green" : "primary" }}>
               {active
-                ? `Active, ends ${end.toRelative()}`
-                : `Will start ${start.toRelative()}`}
+                ? `Active, ends ${end.setLocale("en").toRelative()}`
+                : `Will start ${start.setLocale("en").toRelative()}`}
             </Text>{" "}
             (
             {`${start.toFormat("y-MM-dd HH:mm")}-${end.toFormat(

@@ -11,6 +11,11 @@ type MapState = {
   sectors: boolean
   areas: boolean
   loa: boolean
+  sigmet: boolean
+  search: string
+  selectedAirway: string | null
+  airway: boolean
+  airwayLowerUpper: "LOWER" | "UPPER"
 }
 
 const mapSlice = createSlice({
@@ -22,8 +27,13 @@ const mapSlice = createSlice({
     dwd: localStorageOrDefault("map.dwd", false),
     satellite: localStorageOrDefault("map.satellite", false),
     sectors: localStorageOrDefault("map.sectors", true),
+    sigmet: localStorageOrDefault("map.sigmet", false),
     areas: localStorageOrDefault("map.areas", true),
     loa: localStorageOrDefault("map.loa", false),
+    search: "",
+    selectedAirway: null,
+    airway: localStorageOrDefault("map.airway", false),
+    airwayLowerUpper: localStorageOrDefault("map.airwayLowerUpper", "LOWER"),
   } as MapState,
   reducers: {
     setLevel(state, { payload: level }: PayloadAction<number>) {
@@ -59,8 +69,32 @@ const mapSlice = createSlice({
     setAreas(state, { payload: active }: PayloadAction<boolean>) {
       state.areas = setLocalStorage("map.areas", active)
     },
+    setSigmet(state, { payload: active }: PayloadAction<boolean>) {
+      state.sigmet = setLocalStorage("map.sigmet", active)
+    },
     setLoa(state, { payload: active }: PayloadAction<boolean>) {
       state.loa = setLocalStorage("map.loa", active)
+    },
+    setSearch(state, { payload: search }: PayloadAction<string>) {
+      state.search = search
+    },
+    setSelectedAirway(
+      state,
+      { payload: airway }: PayloadAction<string | null>,
+    ) {
+      state.selectedAirway = airway
+    },
+    setAirwayOnMap(state, { payload: active }: PayloadAction<boolean>) {
+      state.airway = setLocalStorage("map.airway", active)
+    },
+    setAirwayLowerUpper(
+      state,
+      { payload: lowerUpper }: PayloadAction<"LOWER" | "UPPER">,
+    ) {
+      state.airwayLowerUpper = setLocalStorage(
+        "map.airwayLowerUpper",
+        lowerUpper,
+      )
     },
   },
 })
@@ -73,6 +107,13 @@ export const selectSatelliteOnMap = (store: RootState) => store.map.satellite
 export const selectSectorsOnMap = (store: RootState) => store.map.sectors
 export const selectAreasOnMap = (store: RootState) => store.map.areas
 export const selectLoaOnMap = (store: RootState) => store.map.loa
+export const selectSigmetOnMap = (store: RootState) => store.map.sigmet
+export const selectSearch = (store: RootState) => store.map.search
+export const selectAirwayOnMap = (store: RootState) => store.map.airway
+export const selectSelectedAirway = (store: RootState) =>
+  store.map.selectedAirway
+export const selectAirwayLowerUpper = (store: RootState) =>
+  store.map.airwayLowerUpper
 
 export const {
   setLevel,
@@ -83,5 +124,10 @@ export const {
   setSectors,
   setAreas,
   setLoa,
+  setSigmet,
+  setSearch,
+  setAirwayOnMap,
+  setAirwayLowerUpper,
+  setSelectedAirway,
 } = mapSlice.actions
 export const { reducer: mapReducer } = mapSlice

@@ -1,11 +1,11 @@
 /** @jsxImportSource theme-ui */
 
 import { Box, Text } from "theme-ui"
-import { useAppSelector } from "../app/hooks"
-import { selectEcfmpMeasures, usePollEcfmpByFir } from "../services/ecfmpApi"
+import { useAppSelector } from "../../app/hooks"
+import { selectEcfmpMeasures, usePollEcfmpByFir } from "../../services/ecfmpApi"
 import { DateTime, Duration } from "luxon"
 import { ReactNode } from "react"
-import { selectActiveFir } from "../services/configSlice"
+import { selectActiveFir } from "../../services/configSlice"
 
 export const ECFMP = () => {
   const activeFir = useAppSelector(selectActiveFir)
@@ -29,8 +29,8 @@ export const ECFMP = () => {
             <Text variant="label">{fm.ident}</Text>:{" "}
             <Text variant="label" sx={{ color: active ? "green" : "primary" }}>
               {active
-                ? `Active, expires ${end.toRelative()}`
-                : `Will be active ${start.toRelative()}`}
+                ? `Active, expires ${end.setLocale("en").toRelative()}`
+                : `Will be active ${start.setLocale("en").toRelative()}`}
             </Text>{" "}
             (
             {`${start.toFormat("y-MM-dd HH:mm")}-${end.toFormat(
@@ -71,8 +71,8 @@ export const ECFMP = () => {
                         {typeof f.value === "number"
                           ? f.value
                           : f.value instanceof Array
-                          ? f.value.join(", ")
-                          : f.value.event_id}
+                            ? f.value.join(", ")
+                            : f.value.event_id}
                       </Text>
                     </>
                   )}

@@ -12,13 +12,14 @@ import {
   selectSector,
 } from "./sectorApi"
 import { localStorageOrDefault, setLocalStorage } from "../app/utils"
-import createCachedSelector from "re-reselect"
-import { Controller, selectControllers } from "./controllerApi"
+import { createCachedSelector } from "re-reselect"
+import { Controller, selectControllers, selectMe } from "./controllerApi"
 
 export type PositionStatus = { [id: string]: boolean }
 type ActivePositionState = {
   manualActive: PositionStatus
-  syncedToOnline: boolean
+  sectorsSyncedToOnline: boolean
+  positionSyncedToOnline: boolean
   selectedPosition: string | null
 }
 
@@ -30,8 +31,12 @@ const activePositionSlice = createSlice({
       "activePositions.selectedPosition",
       null,
     ),
-    syncedToOnline: localStorageOrDefault(
-      "activePositions.syncedToOnline",
+    sectorsSyncedToOnline: localStorageOrDefault(
+      "activePositions.sectorsSyncedToOnline",
+      true,
+    ),
+    positionSyncedToOnline: localStorageOrDefault(
+      "activePositions.positionSyncedToOnline",
       true,
     ),
     manualActive: {},
@@ -57,9 +62,21 @@ const activePositionSlice = createSlice({
         ...positions.reduce((acc, pos) => ({ ...acc, [pos]: active }), {}),
       }
     },
-    setSyncedToOnline(state, { payload: synced }: PayloadAction<boolean>) {
-      state.syncedToOnline = setLocalStorage(
-        "activePositions.syncedToOnline",
+    setSectorsSyncedToOnline(
+      state,
+      { payload: synced }: PayloadAction<boolean>,
+    ) {
+      state.sectorsSyncedToOnline = setLocalStorage(
+        "activePositions.sectorsSyncedToOnline",
+        synced,
+      )
+    },
+    setPositionSyncedToOnline(
+      state,
+      { payload: synced }: PayloadAction<boolean>,
+    ) {
+      state.positionSyncedToOnline = setLocalStorage(
+        "activePositions.positionSyncedToOnline",
         synced,
       )
     },
@@ -108,12 +125,11 @@ const activePositionSlice = createSlice({
   },
 })
 
+const controllerMatchString = (c: Controller) =>
+  `${c.callsign.slice(0, c.callsign.indexOf("_"))}${c.frequency}`
 const selectControllerMatchStrings = createSelector(
   selectControllers,
-  (controllers) =>
-    controllers.map(
-      (c) => `${c.callsign.slice(0, c.callsign.indexOf("_"))}${c.frequency}`,
-    ),
+  (controllers) => controllers.map(controllerMatchString),
 )
 export const selectOnlinePositions = createSelector(
   selectControllerMatchStrings,
@@ -129,34 +145,48 @@ export const selectOnlinePositions = createSelector(
     ),
 )
 export const selectControllerFromPosition = createCachedSelector(
-  [selectControllers, selectPosition],
+  selectControllers,
+  selectPosition,
   (controllers, pos) =>
-    controllers.find((c) =>
-      pos?.pre.some(
-        (prefix) =>
-          `${c.callsign.slice(0, c.callsign.indexOf("_"))}${c.frequency}` ===
-          `${prefix}${pos.frequency}`,
-      ),
+    controllers.find(
+      (c) =>
+        pos?.pre.some(
+          (prefix) => controllerMatchString(c) === `${prefix}${pos.frequency}`,
+        ),
     ),
 )((_state, pos) => pos ?? "invalid")
 
 export const selectActivePositions = (state: RootState) =>
-  state.activePositions.syncedToOnline
+  state.activePositions.sectorsSyncedToOnline
     ? selectOnlinePositions(state)
     : state.activePositions.manualActive
-export const selectSyncedToOnline = (state: RootState) =>
-  state.activePositions.syncedToOnline
+export const selectPositionSyncedToOnline = (state: RootState) =>
+  state.activePositions.positionSyncedToOnline
+export const selectSectorsSyncedToOnline = (state: RootState) =>
+  state.activePositions.sectorsSyncedToOnline
 export const selectSelectedPosition = createSelector(
   (state: RootState) => state.activePositions.selectedPosition,
   selectActivePositions,
-  (selected, active) =>
-    active[selected ?? ""]
-      ? selected
-      : Object.entries(active).find(([, isActive]) => isActive)?.[0] ?? null,
+  selectPositionSyncedToOnline,
+  selectMe,
+  selectPositions,
+  (selected, active, synced, me, positions) =>
+    synced && me
+      ? Object.entries(positions).find(
+          ([, pos]) =>
+            pos?.pre.some(
+              (prefix) =>
+                `${prefix}${pos.frequency}` === controllerMatchString(me),
+            ),
+        )?.[0] ?? null
+      : active[selected ?? ""]
+        ? selected
+        : Object.entries(active).find(([, isActive]) => isActive)?.[0] ?? null,
 )
 
 export const selectIsPositionActive = createCachedSelector(
-  [selectActivePositions, (_state: RootState, pos: string) => pos],
+  selectActivePositions,
+  (_state: RootState, pos: string) => pos,
   (activePositions, pos) => activePositions[pos],
 )((_state, pos) => pos)
 
@@ -173,16 +203,15 @@ export const selectGroupToPositions = createSelector(
 )
 
 export const selectPositionsByGroup = createCachedSelector(
-  [selectGroupToPositions, (_state: RootState, group: string) => group],
+  selectGroupToPositions,
+  (_state: RootState, group: string) => group,
   (groupToPositions, group) => groupToPositions[group] ?? [],
 )((_state, group) => group)
 
 export const selectIsGroupActive = createCachedSelector(
-  [
-    selectActivePositions,
-    selectPositionsByGroup,
-    (_state: RootState, group: string) => group,
-  ],
+  selectActivePositions,
+  selectPositionsByGroup,
+  (_state: RootState, group: string) => group,
   (activePositions, positions) => positions.some((pos) => activePositions[pos]),
 )((_state, group) => group)
 
@@ -190,12 +219,13 @@ export const selectPositionGroups = createSelector(
   selectPositions,
   selectOnlinePositions,
   selectGroupToPositions,
-  selectSyncedToOnline,
+  selectSectorsSyncedToOnline,
   (positions, onlinePositions, groupToPositions, syncedToOnline) => {
     const groups = [...new Set(Object.values(positions).flatMap((p) => p.pre))]
     return syncedToOnline
-      ? groups.filter((group) =>
-          groupToPositions[group]?.some((pos) => onlinePositions[pos]),
+      ? groups.filter(
+          (group) =>
+            groupToPositions[group]?.some((pos) => onlinePositions[pos]),
         )
       : groups
   },
@@ -207,7 +237,9 @@ const ownerFromSectorsActivePositions = (
 ) => sector?.owner.find((owner) => positions[owner]) ?? null
 
 export const selectOwnedSectors = createSelector(
-  [selectActivePositions, selectAirspace, selectSelectedPosition],
+  selectActivePositions,
+  selectAirspace,
+  selectSelectedPosition,
   (activePositions, sectors, pos) =>
     pos === null
       ? []
@@ -229,30 +261,24 @@ const getOwner = (
   return owner ? positions[owner] : null
 }
 export const selectOwner = createCachedSelector(
-  [
-    selectSector,
-    selectActivePositions,
-    selectPositions,
-    (_state: RootState, sector: string) => sector,
-  ],
+  selectSector,
+  selectActivePositions,
+  selectPositions,
+  (_state: RootState, sector: string) => sector,
   getOwner,
 )((_state, sector) => sector)
 
 export const selectOnlineOwner = createCachedSelector(
-  [
-    selectSector,
-    selectOnlinePositions,
-    selectPositions,
-    (_state: RootState, sector: string) => sector,
-  ],
+  selectSector,
+  selectOnlinePositions,
+  selectPositions,
+  (_state: RootState, sector: string) => sector,
   getOwner,
 )((_state, sector) => sector)
 
 export const selectAirportControllers = createCachedSelector(
-  [
-    selectControllers,
-    (_state: RootState, airportDesignator: string) => airportDesignator,
-  ],
+  selectControllers,
+  (_state: RootState, airportDesignator: string) => airportDesignator,
   (controllers, airport): Controller[] =>
     controllers.filter((c) => {
       const cs_splits = c.callsign.split("_")
@@ -264,11 +290,10 @@ export const selectAirportControllers = createCachedSelector(
 )((_state, airportDesignator) => airportDesignator)
 
 export const selectAirportTopdownController = createCachedSelector(
-  [
-    selectAirport,
-    selectActivePositions,
-    (_state: RootState, airportDesignator: string) => airportDesignator,
-  ],
+  selectAirport,
+  selectActivePositions,
+  (_state: RootState, airportDesignator: string) => airportDesignator,
+
   (airport, positions): string | null =>
     (airport?.topdown.find(
       (pos) => typeof pos === "string" && positions[pos],
@@ -281,7 +306,8 @@ export const {
   setPositionGroup,
   enableAllPositions,
   disableAllPositions,
-  setSyncedToOnline,
+  setSectorsSyncedToOnline,
+  setPositionSyncedToOnline,
   setSelectedPosition,
 } = activePositionSlice.actions
 export const { reducer: activePositionReducer } = activePositionSlice

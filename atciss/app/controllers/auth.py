@@ -1,6 +1,6 @@
 """Application controllers - metar."""
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Dict, List, Optional
 
 from loguru import logger
@@ -100,7 +100,7 @@ def create_jwt(cid: str, refresh_token: Optional[str]) -> str:
         "refresh_token": refresh_token,
         "admin": cid in settings.ADMINS,
     }
-    expire = datetime.utcnow() + timedelta(days=7.5)
+    expire = datetime.now(UTC) + timedelta(days=7.5)
     to_encode.update({"exp": expire})
 
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
@@ -136,6 +136,15 @@ async def get_user(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
 
     except JWTError as exc:
         raise credentials_exception from exc
+
+    return user
+
+
+async def get_controller(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
+    user = await get_user(token)
+
+    if user.rating not in ["S2", "S3", "C1", "C3", "I1", "I3", "SUP", "ADM"]:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, f"not allowed with rating {user.rating}")
 
     return user
 

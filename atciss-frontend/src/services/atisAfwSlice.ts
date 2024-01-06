@@ -44,7 +44,9 @@ export const selectActivePageName = createSelector(
 export const selectActivePage = createSelector(
   selectActiveFir,
   selectActivePageName,
-  (fir, page) => FIR_SETTINGS[fir].pages[page],
+  (fir, page) =>
+    FIR_SETTINGS[fir].pages[page] ??
+    Object.values(FIR_SETTINGS[fir].pages).shift(),
 )
 export const selectPageNames = createSelector(selectActiveFir, (fir) =>
   Object.keys(FIR_SETTINGS[fir].pages),
@@ -57,6 +59,10 @@ export const selectPageAerodromes = createSelector(selectActivePage, (page) => [
 export const selectPageAtisAerodromes = createSelector(
   selectActivePage,
   (page) => page.majorAerodromes,
+)
+export const selectStatusSectors = createSelector(
+  selectActivePage,
+  (page) => page.statusSectors,
 )
 export const selectStaffingSectors = createSelector(
   selectActivePage,
